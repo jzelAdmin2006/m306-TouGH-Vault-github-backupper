@@ -16,4 +16,12 @@ public class RepoRepository {
   public List<Repo> findAll() {
     return repoPersistence.findAll().stream().map(persistenceMapperService::fromEntity).toList();
   }
+
+  public void deleteAll(List<Repo> reposToDelete) {
+    repoPersistence.deleteAll(reposToDelete.stream().map(persistenceMapperService::toEntity).toList());
+  }
+
+  public void saveAll(List<Repo> repos) {
+    repoPersistence.saveAll(repos.stream().map(persistenceMapperService::toEntity).toList());
+  }
 }
