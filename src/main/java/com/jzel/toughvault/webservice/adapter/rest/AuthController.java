@@ -31,7 +31,7 @@ public class AuthController {
   }
 
   private ResponseEntity<Void> proceed(String token) {
-    auth.setAccessToken(token); // TODO persist this encrypted in db
+    auth.setAccessToken(token);
     return ResponseEntity.ok().build();
   }
 }
