@@ -4,7 +4,6 @@ import com.jzel.toughvault.persistence.domain.auth.AuthRepository;
 import java.util.Optional;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -14,7 +13,6 @@ public class Auth {
   private final AuthRepository authRepository;
   private Optional<String> accessToken;
 
-  @Autowired
   public Auth(AuthRepository authRepository) {
     this.authRepository = authRepository;
     this.accessToken = authRepository.loadToken().or(Optional::empty);
