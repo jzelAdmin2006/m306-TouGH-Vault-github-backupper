@@ -92,8 +92,32 @@ public class GitHubService {
   }
 
   private String getQuery(@NotNull String login, @Nullable String cursor) {
-    return
-        "{ \"query\": \"query getContributions($login: String!, $contributionTypes: [RepositoryContributionType], $afterCursor: String) { user(login: $login) { repositoriesContributedTo(contributionTypes: $contributionTypes, first: 100, after: $afterCursor, includeUserRepositories: true, orderBy: {field: PUSHED_AT, direction: DESC}) { pageInfo { hasNextPage, endCursor } nodes { nameWithOwner, pushedAt } } } }\", \"variables\": { \"login\": \"%s\", \"contributionTypes\": [\"COMMIT\", \"REPOSITORY\"], \"afterCursor\": %s } }".formatted(
-            login, cursor == null ? "null" : "\"%s\"".formatted(cursor)); // TODO improve readability of GraphQL query
+    final String query = """
+        query getContributions($login: String!, $contributionTypes: [RepositoryContributionType], $afterCursor: String) {
+          user(login: $login) {
+            repositoriesContributedTo(contributionTypes: $contributionTypes, first: 100, after: $afterCursor, includeUserRepositories: true, orderBy: {field: PUSHED_AT, direction: DESC}) {
+              pageInfo {
+                hasNextPage
+                endCursor
+              }
+              nodes {
+                nameWithOwner
+                pushedAt
+              }
+            }
+          }
+        }
+        """;
+    return """
+        {
+          "query": "%s",
+          "variables": {
+            "login": "%s",
+            "contributionTypes": ["COMMIT", "REPOSITORY"],
+            "afterCursor": %s
+          }
+        }
+        """.formatted(query.replace("\n", "\\n").replace("\"", "\\\""), login,
+        cursor == null ? "null" : "\"" + cursor + "\"");
   }
 }
