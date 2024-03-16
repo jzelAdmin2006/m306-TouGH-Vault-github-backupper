@@ -1,6 +1,6 @@
 CREATE TABLE auth
 (
-    ID             INT UNIQUE   NOT NULL DEFAULT 1,
-    [access_token] VARCHAR(MAX) NULL,
+    ID           INT NOT NULL DEFAULT 1 UNIQUE,
+    access_token TEXT,
     PRIMARY KEY (ID)
-)
+);
