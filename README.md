@@ -3,6 +3,7 @@
 How to run PostgreSQL in a docker container:
 
 ```bash
+docker volume create postgres
 docker run -d \
 	--name TouGH-Vault-postgres \
 	-e POSTGRES_PASSWORD=admin \
