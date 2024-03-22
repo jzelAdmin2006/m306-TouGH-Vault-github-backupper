@@ -5,6 +5,7 @@ import static okhttp3.MediaType.get;
 
 import com.jzel.toughvault.business.domain.github.Auth;
 import com.jzel.toughvault.business.service.RepoService;
+import com.jzel.toughvault.config.SshConfig;
 import com.jzel.toughvault.integration.adapter.model.GitHubEmailDto;
 import com.jzel.toughvault.integration.adapter.model.GitHubGraphQLDto;
 import com.jzel.toughvault.integration.adapter.model.GitHubGraphQLDto.RepositoryNodeDto;
@@ -16,7 +17,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request.Builder;
@@ -35,6 +38,7 @@ public class GitHubService {
   }.getType();
   private static final String USER_URL = "https://api.github.com/user";
   private static final String EMAILS_URL = USER_URL + "/emails";
+  private static final String KEYS_URL = USER_URL + "/keys";
 
   private static final MediaType JSON = get("application/json; charset=utf-8");
   private final Auth auth;
@@ -42,6 +46,8 @@ public class GitHubService {
   private final OkHttpClient client;
   private final RepoService repoService;
   private final IntegrationMapperService mapperService;
+  private final ExecutorService sshKeyExchangeExecutor;
+  private final SshConfig ssh;
 
   public String getPrimaryEmail(String token) throws IOException {
     try (Response response = client.newCall(addAuthorization(token, new Builder().url(EMAILS_URL)
@@ -66,6 +72,35 @@ public class GitHubService {
       nodes.addAll(gitHubResponse.getData().getUser().getRepositoriesContributedTo().getNodes());
     }
     repoService.updateAllRepoEntries(nodes.stream().filter(Objects::nonNull).map(mapperService::fromDto).toList());
+  }
+
+  public void exchangeSshKey(String token) {
+    sshKeyExchangeExecutor.submit(() -> executeSshKeyExchange(token));
+  }
+
+  @SneakyThrows(IOException.class)
+  private void executeSshKeyExchange(String token) {
+    try (Response getResponse = client.newCall(
+        addAuthorization(token, new Builder().url(KEYS_URL)
+            .get()).build()).execute()) {
+      if (getResponse.isSuccessful()) {
+        if (!containsPublicSshKey(getResponse)) {
+          try (Response postResponse = client.newCall(
+              addAuthorization(token, new Builder().url(KEYS_URL)
+                  .post(RequestBody.create(gson.toJson(ssh), JSON))).build()).execute()) {
+            if (!postResponse.isSuccessful()) {
+              throwUnexpectedCodeException(postResponse);
+            }
+          }
+        }
+      } else {
+        throwUnexpectedCodeException(getResponse);
+      }
+    }
+  }
+
+  private boolean containsPublicSshKey(Response getResponse) throws IOException {
+    return requireNonNull(getResponse.body()).string().contains(ssh.getPublicKey());
   }
 
   private Builder addAuthorization(String token, Builder builder) {

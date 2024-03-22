@@ -2,13 +2,13 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.3'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.jetbrains.kotlin.jvm'
 }
 
 group = 'com.jzel'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    sourceCompatibility = '21'
 }
 
 configurations {
@@ -31,6 +31,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     implementation 'org.postgresql:postgresql:42.7.3'
     implementation 'org.flywaydb:flyway-core'
+    implementation 'com.github.mwiede:jsch:0.2.17'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
+    implementation 'org.apache.commons:commons-lang3:3.14.0'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql:10.10.0'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'org.json:json:20240205'
@@ -41,8 +45,12 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation 'org.springframework.security:spring-security-test'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+kotlin {
+    jvmToolchain(21)
 }
