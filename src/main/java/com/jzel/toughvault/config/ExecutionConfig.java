@@ -13,4 +13,9 @@ public class ExecutionConfig {
   ExecutorService sshKeyExchangeExecutor() {
     return newSingleThreadExecutor();
   }
+
+  @Bean
+  ExecutorService backupExecutor() {
+    return newSingleThreadExecutor(); // TODO implement backup tasks using this executor
+  }
 }

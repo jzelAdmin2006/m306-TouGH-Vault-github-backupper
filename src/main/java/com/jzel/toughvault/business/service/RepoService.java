@@ -45,7 +45,8 @@ public class RepoService {
               existingRepo.id(),
               existingRepo.name(),
               updatedRepo.volumeLocation(),
-              updatedRepo.latestPush()
+              updatedRepo.latestPush(),
+              updatedRepo.latestFetch()
           );
         });
   }
