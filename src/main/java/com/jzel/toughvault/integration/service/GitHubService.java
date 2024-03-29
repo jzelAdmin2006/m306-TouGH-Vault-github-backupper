@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import okhttp3.MediaType;
@@ -39,6 +40,7 @@ public class GitHubService {
   private static final String USER_URL = "https://api.github.com/user";
   private static final String EMAILS_URL = USER_URL + "/emails";
   private static final String KEYS_URL = USER_URL + "/keys";
+  private static final String INSTALLATIONS_URL = USER_URL + "/installations";
 
   private static final MediaType JSON = get("application/json; charset=utf-8");
   private final Auth auth;
@@ -54,6 +56,15 @@ public class GitHubService {
         .get())
         .build()).execute()) {
       return response.isSuccessful() ? extractPrimaryEmail(response) : throwUnexpectedCodeException(response);
+    }
+  }
+
+  public boolean tokenRefersToInstallation(String token) throws IOException {
+    try (Response response = client.newCall(
+        addAuthorization(token, new Builder().url(INSTALLATIONS_URL)
+            .get())
+            .build()).execute()) {
+      return requireNonNull(response.body()).string().contains("\"%s\"".formatted(getUserName(() -> token)));
     }
   }
 
@@ -114,8 +125,12 @@ public class GitHubService {
   }
 
   private String getUserName() throws IOException {
+    return getUserName(() -> auth.getAccessToken().orElseThrow());
+  }
+
+  private String getUserName(Supplier<String> tokenSup) throws IOException {
     try (Response response = client.newCall(
-        addAuthorization(auth.getAccessToken().orElseThrow(), new Builder().url(USER_URL)
+        addAuthorization(tokenSup.get(), new Builder().url(USER_URL)
             .get())
             .build()).execute()) {
       return response.isSuccessful() ?
