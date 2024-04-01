@@ -17,7 +17,7 @@ public class GitController {
   private final GitService gitService;
 
   @PutMapping("/clone")
-  public ResponseEntity<Void> scanForGitHubChanges() throws GitAPIException {
+  public ResponseEntity<Void> cloneRepo() throws GitAPIException {
     gitService.cloneRepository();
     return ResponseEntity.ok().build();
   }
