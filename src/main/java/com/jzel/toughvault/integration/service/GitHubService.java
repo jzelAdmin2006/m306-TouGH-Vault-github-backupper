@@ -3,6 +3,7 @@ package com.jzel.toughvault.integration.service;
 import static java.util.Objects.requireNonNull;
 import static okhttp3.MediaType.get;
 
+import com.google.gson.JsonObject;
 import com.jzel.toughvault.business.domain.github.Auth;
 import com.jzel.toughvault.business.service.RepoService;
 import com.jzel.toughvault.config.SshConfig;
@@ -99,7 +100,7 @@ public class GitHubService {
         if (!containsPublicSshKey(getResponse)) {
           try (Response postResponse = client.newCall(
               addAuthorization(token, new Builder().url(KEYS_URL)
-                  .post(RequestBody.create(gson.toJson(ssh), JSON))).build()).execute()) {
+                  .post(RequestBody.create(createSshJson().toString(), JSON))).build()).execute()) {
             if (!postResponse.isSuccessful()) {
               throwUnexpectedCodeException(postResponse);
             }
@@ -186,5 +187,12 @@ public class GitHubService {
         }
         """.formatted(query.replace("\n", "\\n").replace("\"", "\\\""), login,
         cursor == null ? "null" : "\"" + cursor + "\"");
+  }
+
+  private JsonObject createSshJson() {
+    JsonObject sshKey = new JsonObject();
+    sshKey.addProperty("title", "TouGH-Vault SSH");
+    sshKey.addProperty("key", ssh.getPublicKey());
+    return sshKey;
   }
 }
