@@ -18,4 +18,9 @@ public class ExecutionConfig {
   ExecutorService backupExecutor() {
     return newSingleThreadExecutor(); // TODO implement backup tasks using this executor
   }
+
+  @Bean
+  ExecutorService postRegisterFetchExecutor() {
+    return newSingleThreadExecutor();
+  }
 }

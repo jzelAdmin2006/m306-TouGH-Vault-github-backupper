@@ -85,12 +85,13 @@ public class GitHubService {
     repoService.updateAllRepoEntries(nodes.stream().filter(Objects::nonNull).map(mapperService::fromDto).toList());
   }
 
-  public void exchangeSshKey(String token) {
-    sshKeyExchangeExecutor.submit(() -> executeSshKeyExchange(token));
+  public void exchangeSshKey() {
+    sshKeyExchangeExecutor.submit(this::executeSshKeyExchange);
   }
 
   @SneakyThrows(IOException.class)
-  private void executeSshKeyExchange(String token) {
+  private void executeSshKeyExchange() {
+    final String token = auth.getAccessToken().orElseThrow();
     try (Response getResponse = client.newCall(
         addAuthorization(token, new Builder().url(KEYS_URL)
             .get()).build()).execute()) {

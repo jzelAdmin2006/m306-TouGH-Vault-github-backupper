@@ -5,6 +5,8 @@ import static java.util.Objects.requireNonNull;
 
 import com.jzel.toughvault.common.config.GitHubConfig;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+
 import lombok.AllArgsConstructor;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
@@ -21,6 +23,8 @@ public class RegistrationService {
 
   private final GitHubConfig gitHubConfig;
   private final OkHttpClient client;
+  private final ExecutorService postRegisterFetchExecutor;
+  private final GitHubService gitHubService;
 
   public String getTokenFromCode(String code) {
     try (Response response = client.newCall(new Request.Builder().url(TOKEN_ENDPOINT)
@@ -42,5 +46,15 @@ public class RegistrationService {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public void executeBatchPostRegisterFetch() {
+    postRegisterFetchExecutor.submit(() -> {
+        try { // TODO use a library for lambda exception handling
+            gitHubService.scanForGitHubChanges();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    });
   }
 }

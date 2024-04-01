@@ -26,17 +26,14 @@ public class AuthController {
   public ResponseEntity<Void> callback(@RequestParam String code, @AuthenticationPrincipal Jwt principal)
       throws IOException {
     final String token = gitHubRegistrationService.getTokenFromCode(code);
-    if (gitHubService.tokenRefersToInstallation(token)) {
-      gitHubService.exchangeSshKey(token);
-      return principal.getClaimAsString("email").equals(gitHubService.getPrimaryEmail(token)) ? proceed(token)
-          : ResponseEntity.status(403).build();
-    } else {
-      return ResponseEntity.status(428).build();
-    }
+    return gitHubService.tokenRefersToInstallation(token) ? principal.getClaimAsString("email").equals(gitHubService.getPrimaryEmail(token)) ? proceed(token)
+            : ResponseEntity.status(403).build() : ResponseEntity.status(428).build();
   }
 
   private ResponseEntity<Void> proceed(String token) {
     auth.setAccessToken(token);
+    gitHubService.exchangeSshKey();
+    gitHubRegistrationService.executeBatchPostRegisterFetch();
     return ResponseEntity.ok().build();
   }
 }
