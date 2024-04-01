@@ -3,7 +3,7 @@ package com.jzel.toughvault.integration.service;
 import static java.util.Base64.getEncoder;
 import static java.util.Objects.requireNonNull;
 
-import com.jzel.toughvault.common.config.GitHubConfig;
+import com.jzel.toughvault.config.GitHubConfig;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import lombok.AllArgsConstructor;

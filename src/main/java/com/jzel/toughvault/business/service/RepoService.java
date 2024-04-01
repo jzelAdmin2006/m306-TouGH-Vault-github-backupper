@@ -6,10 +6,13 @@ import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 
 import com.jzel.toughvault.business.domain.Repo;
+import com.jzel.toughvault.integration.service.GitService;
 import com.jzel.toughvault.persistence.domain.repo.RepoRepository;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,8 @@ import org.springframework.stereotype.Service;
 public class RepoService {
 
   private final RepoRepository repoRepository;
+  private final ExecutorService backupExecutor;
+  private final GitService gitService;
 
   public List<Repo> getAllRepoEntries() {
     return repoRepository.findAll();
@@ -46,19 +51,36 @@ public class RepoService {
               existingRepo.name(),
               updatedRepo.volumeLocation(),
               updatedRepo.latestPush(),
-              updatedRepo.latestFetch()
+              existingRepo.latestFetch()
           );
         });
   }
 
   private Stream<Repo> newRepos(List<Repo> repos, List<Repo> existingRepos) {
     return repos.stream()
-        .filter(repo -> existingRepos.stream().noneMatch(existingRepo -> existingRepo.name().equals(repo.name())));
+        .filter(
+            repo -> existingRepos.stream().noneMatch(existingRepo -> existingRepo.name().equals(repo.name())));
   }
 
   private List<Repo> getReposToDelete(List<Repo> existingRepos, Set<String> repoNames) {
     return existingRepos.stream()
         .filter(existingRepo -> !repoNames.contains(existingRepo.name()))
         .toList();
+  }
+
+  public Optional<Repo> findRepoEntryById(int id) {
+    return repoRepository.findById(id);
+  }
+
+  public void backupRepo(Repo repo) {
+    backupExecutor.submit(() -> {
+      if (repo.latestFetch().isEmpty()) {
+        gitService.cloneRepository(repo);
+      } else {
+        gitService.pullRepository(repo);
+      }
+      repoRepository.save(
+          new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.latestPush(), repo.latestPush()));
+    });
   }
 }

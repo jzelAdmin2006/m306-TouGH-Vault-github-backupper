@@ -1,4 +1,4 @@
-package com.jzel.toughvault.common.config;
+package com.jzel.toughvault.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
