@@ -6,7 +6,6 @@ import static java.util.Objects.requireNonNull;
 import com.jzel.toughvault.common.config.GitHubConfig;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
-
 import lombok.AllArgsConstructor;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
@@ -49,12 +48,6 @@ public class RegistrationService {
   }
 
   public void executeBatchPostRegisterFetch() {
-    postRegisterFetchExecutor.submit(() -> {
-        try { // TODO use a library for lambda exception handling
-            gitHubService.scanForGitHubChanges();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    });
+    postRegisterFetchExecutor.submit(gitHubService::scanForGitHubChanges);
   }
 }

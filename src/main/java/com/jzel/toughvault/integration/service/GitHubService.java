@@ -70,7 +70,8 @@ public class GitHubService {
   }
 
   @Scheduled(cron = "0 0/5 * * * *")
-  public void scanForGitHubChanges() throws IOException {
+  @SneakyThrows
+  public void scanForGitHubChanges() {
     final String userName = getUserName();
     GitHubGraphQLDto gitHubResponse = gson.fromJson(executeGraphQlQuery(getQuery(userName, null)),
         GitHubGraphQLDto.class);
