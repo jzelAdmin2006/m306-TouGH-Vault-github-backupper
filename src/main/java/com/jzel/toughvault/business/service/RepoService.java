@@ -84,7 +84,12 @@ public class RepoService {
     });
   }
 
-  public void deleteBackup(Repo repo) {
+  public void delete(Repo repo) {
+    gitService.deleteRepository(repo);
+    repoRepository.delete(repo);
+  }
+
+  public void unprotect(Repo repo) {
     gitService.deleteRepository(repo);
     repoRepository.save(
         new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.latestPush(), Optional.empty()));

@@ -33,4 +33,8 @@ public class RepoRepository {
   public Optional<Repo> findById(int id) {
     return repoPersistence.findById(id).map(persistenceMapperService::fromEntity);
   }
+
+  public void delete(Repo repo) {
+    repoPersistence.delete(persistenceMapperService.toEntity(repo));
+  }
 }

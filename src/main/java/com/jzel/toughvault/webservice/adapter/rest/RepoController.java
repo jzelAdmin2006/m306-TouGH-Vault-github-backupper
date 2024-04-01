@@ -31,18 +31,28 @@ public class RepoController {
         .orElse(ResponseEntity.notFound().build());
   }
 
+  @DeleteMapping("/{id}")
+  public ResponseEntity<Void> deleteRepo(@PathVariable(name = "id") int id) {
+    return repoService.findRepoEntryById(id).map(this::proceedDeletion).orElse(ResponseEntity.notFound().build());
+  }
+
   @PutMapping("/backup/{id}")
-  public ResponseEntity<Void> backupRepo(@PathVariable(name = "id") int id) {
+  public ResponseEntity<Void> protect(@PathVariable(name = "id") int id) {
     return repoService.findRepoEntryById(id).map(this::proceedBackup).orElse(ResponseEntity.notFound().build());
   }
 
   @DeleteMapping("/backup/{id}")
-  public ResponseEntity<Void> deleteBackup(@PathVariable(name = "id") int id) {
+  public ResponseEntity<Void> unprotect(@PathVariable(name = "id") int id) {
     return repoService.findRepoEntryById(id).map(this::proceedDeleteBackup).orElse(ResponseEntity.notFound().build());
   }
 
+  private ResponseEntity<Void> proceedDeletion(Repo repo) {
+    repoService.delete(repo);
+    return ResponseEntity.ok().build();
+  }
+
   private ResponseEntity<Void> proceedDeleteBackup(Repo repo) {
-    repoService.deleteBackup(repo);
+    repoService.unprotect(repo);
     return ResponseEntity.ok().build();
   }
 
