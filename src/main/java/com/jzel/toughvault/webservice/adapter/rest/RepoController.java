@@ -8,6 +8,7 @@ import com.jzel.toughvault.webservice.service.WebMapperService;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -33,6 +34,16 @@ public class RepoController {
   @PutMapping("/backup/{id}")
   public ResponseEntity<Void> backupRepo(@PathVariable(name = "id") int id) {
     return repoService.findRepoEntryById(id).map(this::proceedBackup).orElse(ResponseEntity.notFound().build());
+  }
+
+  @DeleteMapping("/backup/{id}")
+  public ResponseEntity<Void> deleteBackup(@PathVariable(name = "id") int id) {
+    return repoService.findRepoEntryById(id).map(this::proceedDeleteBackup).orElse(ResponseEntity.notFound().build());
+  }
+
+  private ResponseEntity<Void> proceedDeleteBackup(Repo repo) {
+    repoService.deleteBackup(repo);
+    return ResponseEntity.ok().build();
   }
 
   private ResponseEntity<Void> proceedBackup(Repo repo) {

@@ -1,5 +1,8 @@
 package com.jzel.toughvault.integration.service;
 
+import static org.eclipse.jgit.util.FileUtils.RECURSIVE;
+import static org.eclipse.jgit.util.FileUtils.delete;
+
 import com.jzel.toughvault.business.domain.Repo;
 import com.jzel.toughvault.config.BackupVolumeConfig;
 import com.jzel.toughvault.config.SshConfig;
@@ -33,7 +36,7 @@ public class GitService {
         .setURI(toSshUri(repo.name()))
         .setDirectory(volumeLocationAsDir(repo.volumeLocation()))
         .setTransportConfigCallback(ssh.getTransportConfigCallback())
-        .call();
+        .call().close();
   }
 
   @SneakyThrows({IOException.class, GitAPIException.class})
@@ -41,6 +44,11 @@ public class GitService {
     try (Git git = Git.open(volumeLocationAsDir(repo.volumeLocation()))) {
       git.pull().setTransportConfigCallback(ssh.getTransportConfigCallback()).call();
     }
+  }
+
+  @SneakyThrows({IOException.class})
+  public void deleteRepository(Repo repo) {
+    delete(volumeLocationAsDir(repo.volumeLocation()), RECURSIVE);
   }
 
   private String toSshUri(String repoName) {

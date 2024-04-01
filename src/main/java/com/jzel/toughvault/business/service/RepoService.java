@@ -83,4 +83,10 @@ public class RepoService {
           new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.latestPush(), repo.latestPush()));
     });
   }
+
+  public void deleteBackup(Repo repo) {
+    gitService.deleteRepository(repo);
+    repoRepository.save(
+        new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.latestPush(), Optional.empty()));
+  }
 }
