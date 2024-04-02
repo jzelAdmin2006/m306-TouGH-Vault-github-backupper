@@ -20,6 +20,11 @@ public class ExecutionConfig {
   }
 
   @Bean
+  ExecutorService manualScanExecutor() {
+    return newSingleThreadExecutor();
+  }
+
+  @Bean
   ExecutorService postRegisterFetchExecutor() {
     return newSingleThreadExecutor();
   }

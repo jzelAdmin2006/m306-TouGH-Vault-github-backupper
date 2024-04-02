@@ -1,5 +1,6 @@
 package com.jzel.toughvault.business.service;
 
+import static com.jzel.toughvault.common.config.Scheduling.MINUTES_SCAN_INTERVAL;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
@@ -28,7 +29,7 @@ public class RepoService {
   private final GitService gitService;
   private final GitHubService gitHubService;
 
-  @Scheduled(cron = "0 0/5 * * * *")
+  @Scheduled(cron = "0 0/" + MINUTES_SCAN_INTERVAL + " * * * *")
   public void scanForGitHubChanges() {
     updateAllRepoEntries(gitHubService.getCurrentRepositories());
   }

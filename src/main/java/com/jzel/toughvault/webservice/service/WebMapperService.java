@@ -4,6 +4,7 @@ import static java.time.ZoneId.systemDefault;
 
 import com.jzel.toughvault.business.domain.Repo;
 import com.jzel.toughvault.webservice.adapter.model.RepoDto;
+import com.jzel.toughvault.webservice.adapter.model.ScanInfoDto;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
@@ -21,5 +22,9 @@ public class WebMapperService {
         repo.isPrivate(),
         OPTIONAL_DATE_TO_DTO_DATE.apply(repo.latestPush()),
         OPTIONAL_DATE_TO_DTO_DATE.apply(repo.latestFetch()));
+  }
+
+  public ScanInfoDto toDto(final LocalDateTime lastScanTime, final boolean scanAllowed) {
+    return new ScanInfoDto(Date.from(lastScanTime.atZone(systemDefault()).toInstant()), scanAllowed);
   }
 }
