@@ -42,6 +42,13 @@ public class RepoController {
     return repoService.findRepoEntryById(id).map(this::proceedBackup).orElse(ResponseEntity.notFound().build());
   }
 
+  @PutMapping("/backup")
+  public ResponseEntity<Void> protectAll() {
+    return repoService.getAllRepoEntries().stream().map(this::proceedBackup)
+        .filter(entity -> entity.getStatusCode().isError()).findFirst()
+        .orElse(ResponseEntity.accepted().build());
+  }
+
   @PostMapping("/backup/{id}")
   public ResponseEntity<Void> restore(@PathVariable(name = "id") int id) {
     return repoService.findRepoEntryById(id).map(this::proceedRestoration).orElse(ResponseEntity.notFound().build());
