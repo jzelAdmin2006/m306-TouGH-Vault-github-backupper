@@ -16,6 +16,10 @@ public class IntegrationMapperService {
 
   public Repo fromDto(final RepositoryNodeDto repoNodeDto) {
     return new Repo(0, repoNodeDto.getNameWithOwner(), encode(repoNodeDto.getNameWithOwner(), UTF_8),
-        Optional.of(LocalDateTime.ofInstant(parse(repoNodeDto.getPushedAt()), systemDefault())), Optional.empty());
+        repoNodeDto.isPrivate(), toBusinessDate(repoNodeDto.getPushedAt()), Optional.empty());
+  }
+
+  private Optional<LocalDateTime> toBusinessDate(String pushedDate) {
+    return Optional.of(LocalDateTime.ofInstant(parse(pushedDate), systemDefault()));
   }
 }

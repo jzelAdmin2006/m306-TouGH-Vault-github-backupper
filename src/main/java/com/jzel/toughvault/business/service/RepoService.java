@@ -56,7 +56,8 @@ public class RepoService {
         gitService.updateRepository(repo);
       }
       repoRepository.save(
-          new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.latestPush(), repo.latestPush()));
+          new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.isPrivate(), repo.latestPush(),
+              repo.latestPush()));
     });
   }
 
@@ -68,7 +69,7 @@ public class RepoService {
   public void unprotect(Repo repo) {
     gitService.deleteRepository(repo);
     repoRepository.save(
-        new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.latestPush(), Optional.empty()));
+        new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.isPrivate(), repo.latestPush(), Optional.empty()));
   }
 
   public void restoreRepo(Repo repo) {
@@ -76,7 +77,8 @@ public class RepoService {
       gitHubService.initialiseRepo(repo);
       gitService.restoreRepo(repo);
       repoRepository.save(
-          new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.latestFetch(), repo.latestFetch()));
+          new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.isPrivate(), repo.latestFetch(),
+              repo.latestFetch()));
     });
   }
 
@@ -94,6 +96,7 @@ public class RepoService {
               existingRepo.id(),
               existingRepo.name(),
               updatedRepo.volumeLocation(),
+              updatedRepo.isPrivate(),
               updatedRepo.latestPush(),
               existingRepo.latestFetch()
           );

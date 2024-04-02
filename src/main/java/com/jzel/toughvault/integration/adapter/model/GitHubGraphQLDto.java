@@ -39,5 +39,6 @@ public class GitHubGraphQLDto {
 
     private String nameWithOwner;
     private String pushedAt;
+    private boolean isPrivate;
   }
 }

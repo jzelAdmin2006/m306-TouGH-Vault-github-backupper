@@ -23,12 +23,14 @@ public class PersistenceMapperService {
 
   public Repo fromEntity(final RepoEntity entity) {
     return new Repo(entity.getId(), entity.getName(), entity.getVolumeLocation(),
+        entity.isPrivate(),
         toLocalDateTime(entity.getLatestPush()),
         toLocalDateTime(entity.getLatestFetch()));
   }
 
   public RepoEntity toEntity(final Repo repo) {
     return new RepoEntity(repo.id(), repo.name(), repo.volumeLocation(),
+        repo.isPrivate(),
         OPTIONAL_DATE_TO_ENTITY_DATE.apply(repo.latestPush()),
         OPTIONAL_DATE_TO_ENTITY_DATE.apply(repo.latestFetch()));
   }

@@ -181,6 +181,7 @@ public class GitHubService {
               nodes {
                 nameWithOwner
                 pushedAt
+                isPrivate
               }
             }
           }
@@ -209,7 +210,7 @@ public class GitHubService {
   private JsonObject createRepoInitJson(Repo repo) {
     JsonObject initRepo = new JsonObject();
     initRepo.addProperty("name", repo.name().split("/")[1]);
-    initRepo.addProperty("private", true); // TODO make this dynamic
+    initRepo.addProperty("private", repo.isPrivate());
     return initRepo;
   }
 }

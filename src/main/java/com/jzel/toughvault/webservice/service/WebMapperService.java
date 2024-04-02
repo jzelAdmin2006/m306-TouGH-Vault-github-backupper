@@ -18,6 +18,7 @@ public class WebMapperService {
 
   public RepoDto toDto(final Repo repo) {
     return new RepoDto(repo.id(), repo.name(), repo.volumeLocation(),
+        repo.isPrivate(),
         OPTIONAL_DATE_TO_DTO_DATE.apply(repo.latestPush()),
         OPTIONAL_DATE_TO_DTO_DATE.apply(repo.latestFetch()));
   }

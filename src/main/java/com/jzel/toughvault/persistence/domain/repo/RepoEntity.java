@@ -25,6 +25,7 @@ public class RepoEntity {
 
   private final String name;
   private final String volumeLocation;
+  private final boolean isPrivate;
   private final Date latestPush;
   private final Date latestFetch;
 }
