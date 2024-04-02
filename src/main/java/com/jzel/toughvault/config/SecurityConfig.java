@@ -25,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
   private String corsAllowedOrigins;
+  private String allowedGitHubPrimaryEmail;
 
   @Bean
   SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
@@ -35,6 +36,9 @@ public class SecurityConfig {
         ).oauth2ResourceServer(oauth2Configurator -> oauth2Configurator.jwt(
             jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwt -> {
               final Map<String, Collection<String>> realmAccess = jwt.getClaim("realm_access");
+              if (!allowedGitHubPrimaryEmail.equals(jwt.getClaim("email"))) {
+                throw new SecurityException("Unauthorized: Email not allowed for this instance.");
+              }
               return new JwtAuthenticationToken(jwt, realmAccess.get("roles").stream()
                   .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                   .toList());
