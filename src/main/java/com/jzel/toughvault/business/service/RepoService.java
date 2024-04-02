@@ -53,7 +53,7 @@ public class RepoService {
       if (repo.latestFetch().isEmpty()) {
         gitService.cloneRepository(repo);
       } else {
-        gitService.pullRepository(repo);
+        gitService.updateRepository(repo);
       }
       repoRepository.save(
           new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.latestPush(), repo.latestPush()));
