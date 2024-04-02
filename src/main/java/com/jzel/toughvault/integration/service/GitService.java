@@ -9,7 +9,6 @@ import com.jzel.toughvault.config.SshConfig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.jgit.api.Git;
@@ -23,12 +22,6 @@ public class GitService {
 
   private final SshConfig ssh;
   private final BackupVolumeConfig volume;
-
-  public void cloneRepository() { // TODO remove this method used for development purposes
-    cloneRepository(new Repo(0, "jzelAdmin2006/frickelbude-soccer-table-polyglot",
-        "jzelAdmin2006%2Ffrickelbude-soccer-table-polyglot", Optional.empty(),
-        Optional.empty()));
-  }
 
   @SneakyThrows(GitAPIException.class)
   public void cloneRepository(Repo repo) {
