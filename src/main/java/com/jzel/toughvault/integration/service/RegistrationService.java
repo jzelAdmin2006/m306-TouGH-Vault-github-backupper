@@ -3,6 +3,7 @@ package com.jzel.toughvault.integration.service;
 import static java.util.Base64.getEncoder;
 import static java.util.Objects.requireNonNull;
 
+import com.jzel.toughvault.business.service.RepoService;
 import com.jzel.toughvault.config.GitHubConfig;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -23,7 +24,7 @@ public class RegistrationService {
   private final GitHubConfig gitHubConfig;
   private final OkHttpClient client;
   private final ExecutorService postRegisterFetchExecutor;
-  private final GitHubService gitHubService;
+  private final RepoService repoService;
 
   public String getTokenFromCode(String code) {
     try (Response response = client.newCall(new Request.Builder().url(TOKEN_ENDPOINT)
@@ -48,6 +49,6 @@ public class RegistrationService {
   }
 
   public void executeBatchPostRegisterFetch() {
-    postRegisterFetchExecutor.submit(gitHubService::scanForGitHubChanges);
+    postRegisterFetchExecutor.submit(repoService::scanForGitHubChanges);
   }
 }

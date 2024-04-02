@@ -51,6 +51,13 @@ public class GitService {
     delete(volumeLocationAsDir(repo.volumeLocation()), RECURSIVE);
   }
 
+  @SneakyThrows({IOException.class, GitAPIException.class})
+  public void restoreRepo(Repo repo) {
+    try (Git git = Git.open(volumeLocationAsDir(repo.volumeLocation()))) {
+      git.push().setTransportConfigCallback(ssh.getTransportConfigCallback()).call();
+    }
+  }
+
   private String toSshUri(String repoName) {
     return "git@github.com:" + repoName + ".git";
   }

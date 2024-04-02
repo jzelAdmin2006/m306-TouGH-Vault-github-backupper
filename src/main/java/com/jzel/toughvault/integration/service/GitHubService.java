@@ -4,8 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static okhttp3.MediaType.get;
 
 import com.google.gson.JsonObject;
+import com.jzel.toughvault.business.domain.Repo;
 import com.jzel.toughvault.business.domain.github.Auth;
-import com.jzel.toughvault.business.service.RepoService;
 import com.jzel.toughvault.config.SshConfig;
 import com.jzel.toughvault.integration.adapter.model.GitHubEmailDto;
 import com.jzel.toughvault.integration.adapter.model.GitHubGraphQLDto;
@@ -29,7 +29,6 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -42,12 +41,12 @@ public class GitHubService {
   private static final String EMAILS_URL = USER_URL + "/emails";
   private static final String KEYS_URL = USER_URL + "/keys";
   private static final String INSTALLATIONS_URL = USER_URL + "/installations";
+  private static final String REPOS_URL = USER_URL + "/repos";
 
   private static final MediaType JSON = get("application/json; charset=utf-8");
   private final Auth auth;
   private final Gson gson;
   private final OkHttpClient client;
-  private final RepoService repoService;
   private final IntegrationMapperService mapperService;
   private final ExecutorService sshKeyExchangeExecutor;
   private final SshConfig ssh;
@@ -69,9 +68,8 @@ public class GitHubService {
     }
   }
 
-  @Scheduled(cron = "0 0/5 * * * *")
   @SneakyThrows
-  public void scanForGitHubChanges() {
+  public List<Repo> getCurrentRepositories() {
     final String userName = getUserName();
     GitHubGraphQLDto gitHubResponse = gson.fromJson(executeGraphQlQuery(getQuery(userName, null)),
         GitHubGraphQLDto.class);
@@ -84,11 +82,22 @@ public class GitHubService {
                   .getEndCursor())), GitHubGraphQLDto.class);
       nodes.addAll(gitHubResponse.getData().getUser().getRepositoriesContributedTo().getNodes());
     }
-    repoService.updateAllRepoEntries(nodes.stream().filter(Objects::nonNull).map(mapperService::fromDto).toList());
+    return nodes.stream().filter(Objects::nonNull).map(mapperService::fromDto).toList();
   }
 
   public void exchangeSshKey() {
     sshKeyExchangeExecutor.submit(this::executeSshKeyExchange);
+  }
+
+  @SneakyThrows
+  public void initialiseRepo(Repo repo) {
+    try (Response response = client.newCall(
+        addAuthorization(auth.getAccessToken().orElseThrow(), new Builder().url(REPOS_URL)
+            .post(RequestBody.create(createRepoInitJson(repo).toString(), JSON))).build()).execute()) {
+      if (!response.isSuccessful()) {
+        throwUnexpectedCodeException(response);
+      }
+    }
   }
 
   @SneakyThrows(IOException.class)
@@ -195,5 +204,12 @@ public class GitHubService {
     sshKey.addProperty("title", "TouGH-Vault SSH");
     sshKey.addProperty("key", ssh.getPublicKey());
     return sshKey;
+  }
+
+  private JsonObject createRepoInitJson(Repo repo) {
+    JsonObject initRepo = new JsonObject();
+    initRepo.addProperty("name", repo.name().split("/")[1]);
+    initRepo.addProperty("private", true); // TODO make this dynamic
+    return initRepo;
   }
 }

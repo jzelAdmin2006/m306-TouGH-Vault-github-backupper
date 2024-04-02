@@ -1,7 +1,6 @@
 package com.jzel.toughvault.webservice.adapter.rest;
 
-import com.jzel.toughvault.integration.service.GitHubService;
-import java.io.IOException;
+import com.jzel.toughvault.business.service.RepoService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -13,11 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class GitHubController {
 
-  private final GitHubService gitHubService;
+  private final RepoService repoService;
 
   @PutMapping("/scan")
-  public ResponseEntity<Void> scanForGitHubChanges() throws IOException {
-    gitHubService.scanForGitHubChanges();
+  public ResponseEntity<Void> scanForGitHubChanges() {
+    repoService.scanForGitHubChanges();
     return ResponseEntity.ok().build();
   }
 }

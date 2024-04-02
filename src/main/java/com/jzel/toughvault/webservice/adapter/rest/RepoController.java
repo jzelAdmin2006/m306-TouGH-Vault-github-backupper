@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +42,11 @@ public class RepoController {
     return repoService.findRepoEntryById(id).map(this::proceedBackup).orElse(ResponseEntity.notFound().build());
   }
 
+  @PostMapping("/backup/{id}")
+  public ResponseEntity<Void> restore(@PathVariable(name = "id") int id) {
+    return repoService.findRepoEntryById(id).map(this::proceedRestoration).orElse(ResponseEntity.notFound().build());
+  }
+
   @DeleteMapping("/backup/{id}")
   public ResponseEntity<Void> unprotect(@PathVariable(name = "id") int id) {
     return repoService.findRepoEntryById(id).map(this::proceedDeleteBackup).orElse(ResponseEntity.notFound().build());
@@ -58,6 +64,11 @@ public class RepoController {
 
   private ResponseEntity<Void> proceedBackup(Repo repo) {
     repoService.backupRepo(repo);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.accepted().build();
+  }
+
+  private ResponseEntity<Void> proceedRestoration(Repo repo) {
+    repoService.restoreRepo(repo);
+    return ResponseEntity.accepted().build();
   }
 }
