@@ -9,6 +9,7 @@ import com.jzel.toughvault.webservice.service.WebMapperService;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +25,8 @@ public class GitHubController {
   private final RepoService repoService;
   private final WebMapperService webMapperService;
   private final ExecutorService manualScanExecutor;
-  private Optional<LocalDateTime> lastManualScanTime = Optional.empty();
+  private final AtomicReference<Optional<LocalDateTime>> lastManualScanTime =
+      new AtomicReference<>(Optional.empty());
 
   @GetMapping("/scan")
   public ResponseEntity<ScanInfoDto> getScanInfo() {
@@ -38,15 +40,15 @@ public class GitHubController {
 
   private LocalDateTime getLastScanTime() {
     LocalDateTime lastAutoScanTime = now().minusMinutes(MINUTES_SCAN_INTERVAL);
-    return lastManualScanTime.filter(t -> t.isAfter(lastAutoScanTime)).orElse(lastAutoScanTime);
+    return lastManualScanTime.get().filter(t -> t.isAfter(lastAutoScanTime)).orElse(lastAutoScanTime);
   }
 
   private boolean scanIsAllowed() {
-    return lastManualScanTime.map(t -> t.isBefore(now().minusMinutes(MINUTES_SCAN_INTERVAL))).orElse(true);
+    return lastManualScanTime.get().map(t -> t.isBefore(now().minusMinutes(MINUTES_SCAN_INTERVAL))).orElse(true);
   }
 
   private ResponseEntity<Void> proceedScan() {
-    lastManualScanTime = Optional.of(now());
+    lastManualScanTime.set(Optional.of(now()));
     manualScanExecutor.submit(repoService::scanForGitHubChanges);
     return ResponseEntity.accepted().build();
   }
