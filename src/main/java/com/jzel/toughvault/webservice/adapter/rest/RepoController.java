@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,41 +36,15 @@ public class RepoController {
     return repoService.findRepoEntryById(id).map(this::proceedDeletion).orElse(ResponseEntity.notFound().build());
   }
 
-  @PutMapping("/backup/{id}")
-  public ResponseEntity<Void> protect(@PathVariable(name = "id") int id) {
-    return repoService.findRepoEntryById(id).map(this::proceedBackup).orElse(ResponseEntity.notFound().build());
-  }
-
-  @PutMapping("/backup")
-  public ResponseEntity<Void> protectAll() {
-    return repoService.getAllRepoEntries().stream().map(this::proceedBackup)
-        .filter(entity -> entity.getStatusCode().isError()).findFirst()
-        .orElse(ResponseEntity.accepted().build());
-  }
-
-  @PostMapping("/backup/{id}")
+  @PostMapping("/{id}/restore")
   public ResponseEntity<Void> restore(@PathVariable(name = "id") int id) {
     return repoService.findRepoEntryById(id).map(this::proceedRestoration).orElse(ResponseEntity.notFound().build());
   }
 
-  @DeleteMapping("/backup/{id}")
-  public ResponseEntity<Void> unprotect(@PathVariable(name = "id") int id) {
-    return repoService.findRepoEntryById(id).map(this::proceedDeleteBackup).orElse(ResponseEntity.notFound().build());
-  }
 
   private ResponseEntity<Void> proceedDeletion(Repo repo) {
     repoService.delete(repo);
     return ResponseEntity.ok().build();
-  }
-
-  private ResponseEntity<Void> proceedDeleteBackup(Repo repo) {
-    repoService.unprotect(repo);
-    return ResponseEntity.ok().build();
-  }
-
-  private ResponseEntity<Void> proceedBackup(Repo repo) {
-    repoService.backupRepo(repo);
-    return ResponseEntity.accepted().build();
   }
 
   private ResponseEntity<Void> proceedRestoration(Repo repo) {
