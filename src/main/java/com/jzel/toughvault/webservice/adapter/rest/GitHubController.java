@@ -30,7 +30,7 @@ public class GitHubController {
 
   @GetMapping("/scan")
   public ResponseEntity<ScanInfoDto> getScanInfo() {
-    return ResponseEntity.ok(webMapperService.toDto(getLastScanTime(), scanIsAllowed()));
+    return ResponseEntity.ok(webMapperService.toDto(getLastScanTime(), getScanAllowedAt(), scanIsAllowed()));
   }
 
   @PutMapping("/scan")
@@ -41,6 +41,12 @@ public class GitHubController {
   private LocalDateTime getLastScanTime() {
     LocalDateTime lastAutoScanTime = now().minusMinutes(MINUTES_SCAN_INTERVAL);
     return lastManualScanTime.get().filter(t -> t.isAfter(lastAutoScanTime)).orElse(lastAutoScanTime);
+  }
+
+  private LocalDateTime getScanAllowedAt() {
+    final LocalDateTime allowedEarliest = lastManualScanTime.get().map(t -> t.plusMinutes(MINUTES_SCAN_INTERVAL))
+        .orElse(now());
+    return allowedEarliest.isBefore(now()) ? now() : allowedEarliest;
   }
 
   private boolean scanIsAllowed() {

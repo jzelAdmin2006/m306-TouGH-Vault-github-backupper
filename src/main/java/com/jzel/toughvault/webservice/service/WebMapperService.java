@@ -17,7 +17,11 @@ import org.springframework.stereotype.Service;
 public class WebMapperService {
 
   private static final Function<Optional<LocalDateTime>, Date> OPTIONAL_DATE_TO_DTO_DATE =
-      o -> o.map(d -> Date.from(d.atZone(systemDefault()).toInstant())).orElse(null);
+      o -> o.map(WebMapperService::toDate).orElse(null);
+
+  private static Date toDate(LocalDateTime lastScanTime) {
+    return Date.from(lastScanTime.atZone(systemDefault()).toInstant());
+  }
 
   public RepoDto toDto(final Repo repo) {
     return new RepoDto(repo.getId(), repo.getName(), repo.getVolumeLocation(),
@@ -26,8 +30,9 @@ public class WebMapperService {
         OPTIONAL_DATE_TO_DTO_DATE.apply(repo.getLatestFetch().get()));
   }
 
-  public ScanInfoDto toDto(final LocalDateTime lastScanTime, final boolean scanAllowed) {
-    return new ScanInfoDto(Date.from(lastScanTime.atZone(systemDefault()).toInstant()), scanAllowed);
+  public ScanInfoDto toDto(final LocalDateTime lastScanTime, final LocalDateTime scanAllowedAt,
+      final boolean scanAllowed) {
+    return new ScanInfoDto(toDate(lastScanTime), toDate(scanAllowedAt), scanAllowed);
   }
 
   public SettingsDto toDto(final Settings settings) {
