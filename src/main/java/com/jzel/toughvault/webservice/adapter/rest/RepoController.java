@@ -26,9 +26,9 @@ public class RepoController {
 
   @GetMapping()
   public ResponseEntity<List<RepoDto>> getRepos() {
-    return auth.getAccessToken()
-        .map(_ -> ResponseEntity.ok(repoService.getAllRepoEntries().stream().map(webMapperService::toDto).toList()))
-        .orElse(ResponseEntity.notFound().build());
+    return auth.getAccessToken().isPresent() ?
+        ResponseEntity.ok(repoService.getAllRepoEntries().stream().map(webMapperService::toDto).toList()) :
+        ResponseEntity.notFound().build();
   }
 
   @DeleteMapping("/{id}")
