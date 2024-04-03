@@ -2,11 +2,13 @@ package com.jzel.toughvault.business.service;
 
 import static com.jzel.toughvault.common.config.Scheduling.MINUTES_SCAN_INTERVAL;
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 
 import com.jzel.toughvault.business.domain.Repo;
+import com.jzel.toughvault.business.domain.Settings;
 import com.jzel.toughvault.integration.service.GitHubService;
 import com.jzel.toughvault.integration.service.GitService;
 import com.jzel.toughvault.persistence.domain.repo.RepoRepository;
@@ -28,6 +30,7 @@ public class RepoService {
   private final ExecutorService backupExecutor;
   private final GitService gitService;
   private final GitHubService gitHubService;
+  private final SettingsService settingsService;
 
   @Scheduled(cron = "0 0/" + MINUTES_SCAN_INTERVAL + " * * * *")
   public void scanForGitHubChanges() {
@@ -41,8 +44,10 @@ public class RepoService {
   public void updateAllRepoEntries(List<Repo> repos) {
     final List<Repo> existingRepos = getAllRepoEntries();
     final Set<String> repoNames = repos.stream().map(Repo::getName).collect(toSet());
-    repoRepository.saveAll(getReposToSave(repos, existingRepos, repoNames));
-    repoRepository.deleteAll(getReposToDelete(existingRepos, repoNames));
+    List<Repo> updatedRepos = getReposToSave(repos, existingRepos, repoNames);
+    repoRepository.saveAll(updatedRepos);
+    updateBackupsWhereNecessary(updatedRepos);
+    handleGitHubDeletedRepos(existingRepos, repoNames);
   }
 
   public Optional<Repo> findRepoEntryById(int id) {
@@ -76,9 +81,25 @@ public class RepoService {
     backupExecutor.submit(() -> {
       gitHubService.initialiseRepo(repo);
       gitService.restoreRepo(repo);
-      repo.getLatestFetch().set(repo.getLatestPush().get());
+      repo.getLatestPush().set(repo.getLatestFetch().get());
       repoRepository.save(repo);
     });
+  }
+
+  private void updateBackupsWhereNecessary(List<Repo> updatedRepos) {
+    final Settings settings = settingsService.getSettings();
+    if (settings.isAutoRepoUpdate()) {
+      updatedRepos.stream().filter(this::backupCanBeInitiated).forEach(this::backupRepo);
+    }
+    if (settings.isAutoCommitUpdate()) {
+      updatedRepos.stream().filter(this::backupCanBeUpdated).forEach(this::backupRepo);
+    }
+  }
+
+  private void handleGitHubDeletedRepos(List<Repo> existingRepos, Set<String> repoNames) {
+    Map<Boolean, List<Repo>> deletedRepos = getGHDeletedReposByRescueSuccess(existingRepos, repoNames);
+    repoRepository.deleteAll(deletedRepos.get(false));
+    repoRepository.saveAll(deletedRepos.get(true).stream().peek(r -> r.getLatestPush().set(Optional.empty())).toList());
   }
 
   private List<Repo> getReposToSave(List<Repo> repos, List<Repo> existingRepos, Set<String> repoNames) {
@@ -86,20 +107,32 @@ public class RepoService {
   }
 
   private Stream<Repo> reposToUpdate(List<Repo> repos, List<Repo> existingRepos, Set<String> repoNames) {
-    Map<String, Repo> reposByName = repos.stream().collect(toMap(Repo::getName, identity()));
+    Map<String, Repo> reposFromGHByName = repos.stream().collect(toMap(Repo::getName, identity()));
     return existingRepos.stream()
         .filter(existingRepo -> repoNames.contains(existingRepo.getName()))
-        .map(existingRepo -> {
-          final Repo updatedRepo = reposByName.get(existingRepo.getName());
-          return new Repo(
-              existingRepo.getId(),
-              existingRepo.getName(),
-              updatedRepo.getVolumeLocation(),
-              updatedRepo.isPrivate(),
-              updatedRepo.getLatestPush(),
-              existingRepo.getLatestFetch()
-          );
-        });
+        .map(existingRepo -> getUpdatedRepo(existingRepo, reposFromGHByName));
+  }
+
+  private Repo getUpdatedRepo(Repo existingRepo, Map<String, Repo> reposByName) {
+    final Repo currentRepoFromGitHub = reposByName.get(existingRepo.getName());
+    return new Repo(
+        existingRepo.getId(),
+        existingRepo.getName(),
+        currentRepoFromGitHub.getVolumeLocation(),
+        currentRepoFromGitHub.isPrivate(),
+        currentRepoFromGitHub.getLatestPush(),
+        existingRepo.getLatestFetch()
+    );
+  }
+
+  private boolean backupCanBeInitiated(Repo repo) {
+    return repo.getLatestFetch().get().isEmpty() && repo.getLatestPush().get().isPresent();
+  }
+
+  private boolean backupCanBeUpdated(Repo repo) {
+    return repo.getLatestPush().get()
+        .map(lp -> lp.isAfter(repo.getLatestFetch().get().orElse(lp)))
+        .orElse(false);
   }
 
   private Stream<Repo> newRepos(List<Repo> repos, List<Repo> existingRepos) {
@@ -108,9 +141,9 @@ public class RepoService {
             repo -> existingRepos.stream().noneMatch(existingRepo -> existingRepo.getName().equals(repo.getName())));
   }
 
-  private List<Repo> getReposToDelete(List<Repo> existingRepos, Set<String> repoNames) {
+  private Map<Boolean, List<Repo>> getGHDeletedReposByRescueSuccess(List<Repo> existingRepos, Set<String> repoNames) {
     return existingRepos.stream()
         .filter(existingRepo -> !repoNames.contains(existingRepo.getName()))
-        .toList();
+        .collect(partitioningBy(r -> r.getLatestFetch().get().isPresent()));
   }
 }
