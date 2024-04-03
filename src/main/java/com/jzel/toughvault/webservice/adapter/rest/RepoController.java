@@ -27,7 +27,7 @@ public class RepoController {
   @GetMapping()
   public ResponseEntity<List<RepoDto>> getRepos() {
     return auth.getAccessToken()
-        .map(token -> ResponseEntity.ok(repoService.getAllRepoEntries().stream().map(webMapperService::toDto).toList()))
+        .map(_ -> ResponseEntity.ok(repoService.getAllRepoEntries().stream().map(webMapperService::toDto).toList()))
         .orElse(ResponseEntity.notFound().build());
   }
 
