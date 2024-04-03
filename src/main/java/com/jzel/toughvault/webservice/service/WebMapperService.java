@@ -3,8 +3,10 @@ package com.jzel.toughvault.webservice.service;
 import static java.time.ZoneId.systemDefault;
 
 import com.jzel.toughvault.business.domain.Repo;
+import com.jzel.toughvault.business.domain.Settings;
 import com.jzel.toughvault.webservice.adapter.model.RepoDto;
 import com.jzel.toughvault.webservice.adapter.model.ScanInfoDto;
+import com.jzel.toughvault.webservice.adapter.model.SettingsDto;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
@@ -18,13 +20,17 @@ public class WebMapperService {
       o -> o.map(d -> Date.from(d.atZone(systemDefault()).toInstant())).orElse(null);
 
   public RepoDto toDto(final Repo repo) {
-    return new RepoDto(repo.id(), repo.name(), repo.volumeLocation(),
+    return new RepoDto(repo.getId(), repo.getName(), repo.getVolumeLocation(),
         repo.isPrivate(),
-        OPTIONAL_DATE_TO_DTO_DATE.apply(repo.latestPush()),
-        OPTIONAL_DATE_TO_DTO_DATE.apply(repo.latestFetch()));
+        OPTIONAL_DATE_TO_DTO_DATE.apply(repo.getLatestPush().get()),
+        OPTIONAL_DATE_TO_DTO_DATE.apply(repo.getLatestFetch().get()));
   }
 
   public ScanInfoDto toDto(final LocalDateTime lastScanTime, final boolean scanAllowed) {
     return new ScanInfoDto(Date.from(lastScanTime.atZone(systemDefault()).toInstant()), scanAllowed);
+  }
+
+  public SettingsDto toDto(final Settings settings) {
+    return new SettingsDto(settings.getId(), settings.isAutoRepoUpdate(), settings.isAutoCommitUpdate());
   }
 }

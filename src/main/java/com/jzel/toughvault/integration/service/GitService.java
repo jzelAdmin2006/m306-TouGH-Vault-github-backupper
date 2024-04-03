@@ -30,8 +30,8 @@ public class GitService {
   @SneakyThrows(GitAPIException.class)
   public void cloneRepository(Repo repo) {
     try (Git git = Git.cloneRepository()
-        .setURI(toSshUri(repo.name()))
-        .setDirectory(volumeLocationAsDir(repo.volumeLocation()))
+        .setURI(toSshUri(repo.getName()))
+        .setDirectory(volumeLocationAsDir(repo.getVolumeLocation()))
         .setTransportConfigCallback(ssh.getTransportConfigCallback())
         .setNoCheckout(true)
         .call()) {
@@ -54,7 +54,7 @@ public class GitService {
 
   @SneakyThrows({IOException.class})
   public void deleteRepository(Repo repo) {
-    File volLocAsDir = volumeLocationAsDir(repo.volumeLocation());
+    File volLocAsDir = volumeLocationAsDir(repo.getVolumeLocation());
     if (volLocAsDir.exists()) {
       delete(volLocAsDir, RECURSIVE);
     }
@@ -62,7 +62,7 @@ public class GitService {
 
   @SneakyThrows({IOException.class, GitAPIException.class})
   public void restoreRepo(Repo repo) {
-    try (Git git = Git.open(volumeLocationAsDir(repo.volumeLocation()))) {
+    try (Git git = Git.open(volumeLocationAsDir(repo.getVolumeLocation()))) {
       git.branchList().setListMode(ALL).call().forEach(ref -> pushBranch(ref, git));
     }
   }

@@ -209,7 +209,7 @@ public class GitHubService {
 
   private JsonObject createRepoInitJson(Repo repo) {
     JsonObject initRepo = new JsonObject();
-    initRepo.addProperty("name", repo.name().split("/")[1]);
+    initRepo.addProperty("name", repo.getName().split("/")[1]);
     initRepo.addProperty("private", repo.isPrivate());
     return initRepo;
   }

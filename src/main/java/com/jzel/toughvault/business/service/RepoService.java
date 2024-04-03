@@ -40,7 +40,7 @@ public class RepoService {
 
   public void updateAllRepoEntries(List<Repo> repos) {
     final List<Repo> existingRepos = getAllRepoEntries();
-    final Set<String> repoNames = repos.stream().map(Repo::name).collect(toSet());
+    final Set<String> repoNames = repos.stream().map(Repo::getName).collect(toSet());
     repoRepository.saveAll(getReposToSave(repos, existingRepos, repoNames));
     repoRepository.deleteAll(getReposToDelete(existingRepos, repoNames));
   }
@@ -51,14 +51,13 @@ public class RepoService {
 
   public void backupRepo(Repo repo) {
     backupExecutor.submit(() -> {
-      if (repo.latestFetch().isEmpty()) {
+      if (repo.getLatestFetch().get().isEmpty()) {
         gitService.cloneRepository(repo);
       } else {
         gitService.updateRepository(repo);
       }
-      repoRepository.save(
-          new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.isPrivate(), repo.latestPush(),
-              repo.latestPush()));
+      repo.getLatestFetch().set(repo.getLatestPush().get());
+      repoRepository.save(repo);
     });
   }
 
@@ -69,17 +68,16 @@ public class RepoService {
 
   public void unprotect(Repo repo) {
     gitService.deleteRepository(repo);
-    repoRepository.save(
-        new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.isPrivate(), repo.latestPush(), Optional.empty()));
+    repo.getLatestFetch().set(Optional.empty());
+    repoRepository.save(repo);
   }
 
   public void restoreRepo(Repo repo) {
     backupExecutor.submit(() -> {
       gitHubService.initialiseRepo(repo);
       gitService.restoreRepo(repo);
-      repoRepository.save(
-          new Repo(repo.id(), repo.name(), repo.volumeLocation(), repo.isPrivate(), repo.latestFetch(),
-              repo.latestFetch()));
+      repo.getLatestFetch().set(repo.getLatestPush().get());
+      repoRepository.save(repo);
     });
   }
 
@@ -88,18 +86,18 @@ public class RepoService {
   }
 
   private Stream<Repo> reposToUpdate(List<Repo> repos, List<Repo> existingRepos, Set<String> repoNames) {
-    Map<String, Repo> reposByName = repos.stream().collect(toMap(Repo::name, identity()));
+    Map<String, Repo> reposByName = repos.stream().collect(toMap(Repo::getName, identity()));
     return existingRepos.stream()
-        .filter(existingRepo -> repoNames.contains(existingRepo.name()))
+        .filter(existingRepo -> repoNames.contains(existingRepo.getName()))
         .map(existingRepo -> {
-          final Repo updatedRepo = reposByName.get(existingRepo.name());
+          final Repo updatedRepo = reposByName.get(existingRepo.getName());
           return new Repo(
-              existingRepo.id(),
-              existingRepo.name(),
-              updatedRepo.volumeLocation(),
+              existingRepo.getId(),
+              existingRepo.getName(),
+              updatedRepo.getVolumeLocation(),
               updatedRepo.isPrivate(),
-              updatedRepo.latestPush(),
-              existingRepo.latestFetch()
+              updatedRepo.getLatestPush(),
+              existingRepo.getLatestFetch()
           );
         });
   }
@@ -107,12 +105,12 @@ public class RepoService {
   private Stream<Repo> newRepos(List<Repo> repos, List<Repo> existingRepos) {
     return repos.stream()
         .filter(
-            repo -> existingRepos.stream().noneMatch(existingRepo -> existingRepo.name().equals(repo.name())));
+            repo -> existingRepos.stream().noneMatch(existingRepo -> existingRepo.getName().equals(repo.getName())));
   }
 
   private List<Repo> getReposToDelete(List<Repo> existingRepos, Set<String> repoNames) {
     return existingRepos.stream()
-        .filter(existingRepo -> !repoNames.contains(existingRepo.name()))
+        .filter(existingRepo -> !repoNames.contains(existingRepo.getName()))
         .toList();
   }
 }
