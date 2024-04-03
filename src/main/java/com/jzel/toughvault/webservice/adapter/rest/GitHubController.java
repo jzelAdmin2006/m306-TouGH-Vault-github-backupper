@@ -39,14 +39,19 @@ public class GitHubController {
   }
 
   private LocalDateTime getLastScanTime() {
-    LocalDateTime lastAutoScanTime = now().minusMinutes(MINUTES_SCAN_INTERVAL);
+    final LocalDateTime now = now();
+    LocalDateTime lastAutoScanTime = now
+        .minusMinutes(now.getMinute() % MINUTES_SCAN_INTERVAL)
+        .withSecond(0)
+        .withNano(0);
     return lastManualScanTime.get().filter(t -> t.isAfter(lastAutoScanTime)).orElse(lastAutoScanTime);
   }
 
   private LocalDateTime getScanAllowedAt() {
+    final LocalDateTime now = now();
     final LocalDateTime allowedEarliest = lastManualScanTime.get().map(t -> t.plusMinutes(MINUTES_SCAN_INTERVAL))
-        .orElse(now());
-    return allowedEarliest.isBefore(now()) ? now() : allowedEarliest;
+        .orElse(now);
+    return allowedEarliest.isBefore(now) ? now : allowedEarliest;
   }
 
   private boolean scanIsAllowed() {
