@@ -4,6 +4,7 @@ import static com.jzel.toughvault.common.config.Scheduling.MINUTES_SCAN_INTERVAL
 import static java.time.LocalDateTime.now;
 
 import com.jzel.toughvault.business.service.RepoService;
+import com.jzel.toughvault.integration.service.RegistrationService;
 import com.jzel.toughvault.webservice.adapter.model.ScanInfoDto;
 import com.jzel.toughvault.webservice.service.WebMapperService;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ public class GitHubController {
   private final RepoService repoService;
   private final WebMapperService webMapperService;
   private final ExecutorService manualScanExecutor;
+  private final RegistrationService registrationService;
   private final AtomicReference<Optional<LocalDateTime>> lastManualScanTime =
       new AtomicReference<>(Optional.empty());
 
@@ -44,7 +46,8 @@ public class GitHubController {
         .minusMinutes(now.getMinute() % MINUTES_SCAN_INTERVAL)
         .withSecond(0)
         .withNano(0);
-    return lastManualScanTime.get().filter(t -> t.isAfter(lastAutoScanTime)).orElse(lastAutoScanTime);
+    return registrationService.getInitFetchAt().filter(t -> t.isAfter(lastAutoScanTime))
+        .orElse(lastManualScanTime.get().filter(t -> t.isAfter(lastAutoScanTime)).orElse(lastAutoScanTime));
   }
 
   private LocalDateTime getScanAllowedAt() {
