@@ -46,7 +46,7 @@ public class RepoService {
     final Set<String> repoNames = repos.stream().map(Repo::getName).collect(toSet());
     List<Repo> updatedRepos = getReposToSave(repos, existingRepos, repoNames);
     repoRepository.saveAll(updatedRepos);
-    updateBackupsWhereNecessary(updatedRepos);
+    updateBackupsWhereNecessary(getAllRepoEntries());
     handleGitHubDeletedRepos(existingRepos, repoNames);
   }
 
