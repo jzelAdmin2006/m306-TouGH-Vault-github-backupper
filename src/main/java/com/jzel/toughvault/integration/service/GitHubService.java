@@ -55,7 +55,7 @@ public class GitHubService {
     try (Response response = client.newCall(addAuthorization(token, new Builder().url(EMAILS_URL)
         .get())
         .build()).execute()) {
-      return response.isSuccessful() ? extractPrimaryEmail(response) : throwUnexpectedCodeException(response);
+      return response.isSuccessful() ? extractPrimaryEmail(response) : handleUnexpectedCodeException(response);
     }
   }
 
@@ -95,7 +95,7 @@ public class GitHubService {
         addAuthorization(auth.getAccessToken().orElseThrow(), new Builder().url(REPOS_URL)
             .post(RequestBody.create(createRepoInitJson(repo).toString(), JSON))).build()).execute()) {
       if (!response.isSuccessful()) {
-        throwUnexpectedCodeException(response);
+        handleUnexpectedCodeException(response);
       }
     }
   }
@@ -112,12 +112,12 @@ public class GitHubService {
               addAuthorization(token, new Builder().url(KEYS_URL)
                   .post(RequestBody.create(createSshJson().toString(), JSON))).build()).execute()) {
             if (!postResponse.isSuccessful()) {
-              throwUnexpectedCodeException(postResponse);
+              handleUnexpectedCodeException(postResponse);
             }
           }
         }
       } else {
-        throwUnexpectedCodeException(getResponse);
+        handleUnexpectedCodeException(getResponse);
       }
     }
   }
@@ -147,7 +147,7 @@ public class GitHubService {
             .build()).execute()) {
       return response.isSuccessful() ?
           gson.fromJson(requireNonNull(response.body()).string(), GitHubUserDto.class).getLogin()
-          : throwUnexpectedCodeException(response);
+          : handleUnexpectedCodeException(response);
     }
   }
 
@@ -157,11 +157,14 @@ public class GitHubService {
         .post(RequestBody.create(query, JSON))).build()).execute()) {
       return response.isSuccessful() ?
           requireNonNull(response.body()).string()
-          : throwUnexpectedCodeException(response);
+          : handleUnexpectedCodeException(response);
     }
   }
 
-  private String throwUnexpectedCodeException(Response response) throws IOException {
+  private String handleUnexpectedCodeException(Response response) throws IOException {
+    if (response.code() == 401) {
+      auth.clearAccessToken();
+    }
     throw new IOException("Unexpected code " + response);
   }
 

@@ -22,4 +22,9 @@ public class Auth {
     this.accessToken = Optional.of(accessToken);
     authRepository.save(accessToken);
   }
+
+  public void clearAccessToken() {
+    this.accessToken = Optional.empty();
+    authRepository.delete();
+  }
 }

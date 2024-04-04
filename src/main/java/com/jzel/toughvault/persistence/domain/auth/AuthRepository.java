@@ -19,4 +19,8 @@ public class AuthRepository {
   public Optional<String> loadToken() {
     return authPersistence.findById(1).map(mapperService::tokenFromEntity);
   }
+
+  public void delete() {
+    authPersistence.deleteAll();
+  }
 }
