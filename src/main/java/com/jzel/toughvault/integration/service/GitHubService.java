@@ -85,6 +85,11 @@ public class GitHubService {
     return nodes.stream().filter(Objects::nonNull).map(mapperService::fromDto).toList();
   }
 
+  public Repo getRepoByName(String name) {
+    return getCurrentRepositories().stream().filter(repo -> repo.getName().equals(name)).findFirst()
+        .orElseThrow(); // TODO use specific rest API call to improve performance
+  }
+
   public void exchangeSshKey() {
     sshKeyExchangeExecutor.submit(this::executeSshKeyExchange);
   }

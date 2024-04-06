@@ -12,6 +12,7 @@ import com.jzel.toughvault.business.domain.Settings;
 import com.jzel.toughvault.integration.service.GitHubService;
 import com.jzel.toughvault.integration.service.GitService;
 import com.jzel.toughvault.persistence.domain.repo.RepoRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -81,7 +82,10 @@ public class RepoService {
     backupExecutor.submit(() -> {
       gitHubService.initialiseRepo(repo);
       gitService.restoreRepo(repo);
-      repo.getLatestPush().set(repo.getLatestFetch().get());
+      final Optional<LocalDateTime> restorePush = gitHubService.getRepoByName(repo.getName()).getLatestPush().get();
+      restorePush.orElseThrow();
+      repo.getLatestPush().set(restorePush);
+      repo.getLatestFetch().set(restorePush);
       repoRepository.save(repo);
     });
   }
