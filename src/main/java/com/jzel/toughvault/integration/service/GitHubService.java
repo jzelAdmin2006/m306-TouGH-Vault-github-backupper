@@ -3,16 +3,17 @@ package com.jzel.toughvault.integration.service;
 import static java.util.Objects.requireNonNull;
 import static okhttp3.MediaType.get;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.jzel.toughvault.business.domain.Repo;
 import com.jzel.toughvault.business.domain.github.Auth;
 import com.jzel.toughvault.config.SshConfig;
 import com.jzel.toughvault.integration.adapter.model.GitHubEmailDto;
 import com.jzel.toughvault.integration.adapter.model.GitHubGraphQLDto;
 import com.jzel.toughvault.integration.adapter.model.GitHubGraphQLDto.RepositoryNodeDto;
+import com.jzel.toughvault.integration.adapter.model.GitHubRepositoryDto;
 import com.jzel.toughvault.integration.adapter.model.GitHubUserDto;
-import com.nimbusds.jose.shaded.gson.Gson;
-import com.nimbusds.jose.shaded.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -37,12 +38,14 @@ public class GitHubService {
 
   public static final Type GITHUB_EMAILS_ARRAY_TYPE = new TypeToken<List<GitHubEmailDto>>() {
   }.getType();
-  private static final String USER_URL = "https://api.github.com/user";
+  private static final String GITHUB_API_URL = "https://api.github.com";
+  private static final String GRAPHQL_URL = GITHUB_API_URL + "/graphql";
+  private static final String USER_URL = GITHUB_API_URL + "/user";
   private static final String EMAILS_URL = USER_URL + "/emails";
   private static final String KEYS_URL = USER_URL + "/keys";
   private static final String INSTALLATIONS_URL = USER_URL + "/installations";
-  private static final String REPOS_URL = USER_URL + "/repos";
-
+  private static final String USER_REPOS_URL = USER_URL + "/repos";
+  private static final String REPOS_URL = GITHUB_API_URL + "/repos";
   private static final MediaType JSON = get("application/json; charset=utf-8");
   private final Auth auth;
   private final Gson gson;
@@ -85,19 +88,24 @@ public class GitHubService {
     return nodes.stream().filter(Objects::nonNull).map(mapperService::fromDto).toList();
   }
 
+  @SneakyThrows(IOException.class)
   public Repo getRepoByName(String name) {
-    return getCurrentRepositories().stream().filter(repo -> repo.getName().equals(name)).findFirst()
-        .orElseThrow(); // TODO use specific rest API call to improve performance
+    try (Response response = client.newCall(addAuthorization(new Builder().url(REPOS_URL + "/" + name)
+        .get()).build()).execute()) {
+      return response.isSuccessful() ? mapperService.fromDto(
+          gson.fromJson(requireNonNull(response.body()).string(), GitHubRepositoryDto.class))
+          : handleUnexpectedCodeException(response);
+    }
   }
 
   public void exchangeSshKey() {
     sshKeyExchangeExecutor.submit(this::executeSshKeyExchange);
   }
 
-  @SneakyThrows
+  @SneakyThrows(IOException.class)
   public void initialiseRepo(Repo repo) {
     try (Response response = client.newCall(
-        addAuthorization(auth.getAccessToken().orElseThrow(), new Builder().url(REPOS_URL)
+        addAuthorization(auth.getAccessToken().orElseThrow(), new Builder().url(USER_REPOS_URL)
             .post(RequestBody.create(createRepoInitJson(repo).toString(), JSON))).build()).execute()) {
       if (!response.isSuccessful()) {
         handleUnexpectedCodeException(response);
@@ -158,7 +166,7 @@ public class GitHubService {
 
   private String executeGraphQlQuery(String query) throws IOException {
     try (Response response = client.newCall(addAuthorization(new Builder()
-        .url("https://api.github.com/graphql")
+        .url(GRAPHQL_URL)
         .post(RequestBody.create(query, JSON))).build()).execute()) {
       return response.isSuccessful() ?
           requireNonNull(response.body()).string()
@@ -166,7 +174,7 @@ public class GitHubService {
     }
   }
 
-  private String handleUnexpectedCodeException(Response response) throws IOException {
+  private <T> T handleUnexpectedCodeException(Response response) throws IOException {
     if (response.code() == 401) {
       auth.clearAccessToken();
     }

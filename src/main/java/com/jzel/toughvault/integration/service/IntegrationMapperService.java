@@ -7,6 +7,7 @@ import static java.time.ZoneId.systemDefault;
 
 import com.jzel.toughvault.business.domain.Repo;
 import com.jzel.toughvault.integration.adapter.model.GitHubGraphQLDto.RepositoryNodeDto;
+import com.jzel.toughvault.integration.adapter.model.GitHubRepositoryDto;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,6 +20,11 @@ public class IntegrationMapperService {
     return new Repo(0, repoNodeDto.getNameWithOwner(), encode(repoNodeDto.getNameWithOwner(), UTF_8),
         repoNodeDto.isPrivate(), new AtomicReference<>(toBusinessDate(repoNodeDto.getPushedAt())),
         new AtomicReference<>(Optional.empty()));
+  }
+
+  public Repo fromDto(final GitHubRepositoryDto repoDto) {
+    return new Repo(0, repoDto.getFullName(), encode(repoDto.getFullName(), UTF_8), repoDto.isPrivate(),
+        new AtomicReference<>(toBusinessDate(repoDto.getPushedAt())), new AtomicReference<>(Optional.empty()));
   }
 
   private Optional<LocalDateTime> toBusinessDate(String pushedDate) {
