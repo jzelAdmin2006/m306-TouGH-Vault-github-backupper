@@ -35,7 +35,6 @@ dependencies {
     implementation 'org.eclipse.jgit:org.eclipse.jgit.ssh.jsch:6.9.0.202403050737-r'
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.9.0.202403050737-r'
     implementation 'org.apache.commons:commons-lang3:3.14.0'
-    runtimeOnly 'org.flywaydb:flyway-database-postgresql:10.10.0'
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'org.json:json:20240205'
     implementation 'org.jasypt:jasypt:1.9.3'
@@ -53,4 +52,9 @@ tasks.named('test') {
 }
 kotlin {
     jvmToolchain(21)
+}
+
+bootJar {
+    archiveBaseName = 'app'
+    archiveVersion = ''
 }
