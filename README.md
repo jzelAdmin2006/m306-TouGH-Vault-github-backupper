@@ -1,16 +1,34 @@
 # m306-TouGH-Vault-github-backupper
 
-TODO use keycloak prod mode
-
 How to run TouGH-Vault with Docker:
 
 ```bash
 docker network create TouGH-Vault
-docker run --name TouGH-Vault-Keycloak -d -p 18080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin \
-    -e PROXY_ADDRESS_FORWARDING=true -e KEYCLOAK_FRONTEND_URL=https://tough-vault-keycloak.jzel.online \
-    -e KC_HTTP_ENABLED=false -e KC_HOSTNAME_STRICT_HTTPS=true \
-    -e KC_PROXY=edge quay.io/keycloak/keycloak:23.0.7 start-dev
 docker volume create postgres
+docker run -d \
+    --network TouGH-Vault \
+    --name Keycloak-postgres \
+    -e POSTGRES_PASSWORD=admin \
+    -e POSTGRES_DB=postgres \
+    -e POSTGRES_USER=postgres \
+    -v postgres:/var/lib/postgresql/data \
+    -p 5433:5432 \
+    postgres
+docker run --name TouGH-Vault-Keycloak -d -p 18080:8080 \
+    -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin \
+    -e PROXY_ADDRESS_FORWARDING=true \
+    -e KEYCLOAK_FRONTEND_URL=https://tough-vault-keycloak.jzel.online \
+    -e KC_HTTP_ENABLED=false -e KC_HOSTNAME_STRICT_HTTPS=true \
+    -e KC_PROXY=edge \
+    -e KC_HOSTNAME=tough-vault-keycloak.jzel.online \
+    -e DB_VENDOR=postgres \
+    -e DB_ADDR=TouGH-Vault-postgres \
+    -e DB_PORT=5433 \
+    -e DB_DATABASE=keycloak \
+    -e DB_USER=keycloak \
+    -e DB_PASSWORD=admin \
+    --network TouGH-Vault \
+    quay.io/keycloak/keycloak:23.0.7 start
 docker run -d \
     --network TouGH-Vault \
 	--name TouGH-Vault-postgres \
