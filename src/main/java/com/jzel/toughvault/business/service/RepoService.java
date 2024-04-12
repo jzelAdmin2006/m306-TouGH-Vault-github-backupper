@@ -102,8 +102,10 @@ public class RepoService {
 
   private void handleGitHubDeletedRepos(List<Repo> existingRepos, Set<String> repoNames) {
     Map<Boolean, List<Repo>> deletedRepos = getGHDeletedReposByRescueSuccess(existingRepos, repoNames);
-    repoRepository.deleteAll(deletedRepos.get(false));
-    repoRepository.saveAll(deletedRepos.get(true).stream().peek(r -> r.getLatestPush().set(Optional.empty())).toList());
+    repoRepository.deleteAll(
+        deletedRepos.get(false)); // TODO (optional feature) send email notification for permanently lost repos
+    repoRepository.saveAll(deletedRepos.get(true).stream().peek(r -> r.getLatestPush().set(Optional.empty()))
+        .toList()); // TODO (optional feature) send email notification for new rescued repos
   }
 
   private List<Repo> getReposToSave(List<Repo> repos, List<Repo> existingRepos, Set<String> repoNames) {
