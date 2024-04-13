@@ -4,14 +4,14 @@ How to run TouGH-Vault with Docker:
 
 ```bash
 docker network create TouGH-Vault
-docker volume create postgres
+docker volume create kc-postgres
 docker run -d \
     --network TouGH-Vault \
     --name Keycloak-postgres \
     -e POSTGRES_PASSWORD=admin \
     -e POSTGRES_DB=postgres \
     -e POSTGRES_USER=postgres \
-    -v postgres:/var/lib/postgresql/data \
+    -v kc-postgres:/var/lib/postgresql/data \
     -p 5433:5432 \
     postgres
 docker run --name TouGH-Vault-Keycloak -d -p 18080:8080 \
@@ -29,6 +29,7 @@ docker run --name TouGH-Vault-Keycloak -d -p 18080:8080 \
     -e DB_PASSWORD=admin \
     --network TouGH-Vault \
     quay.io/keycloak/keycloak:23.0.7 start
+docker volume create postgres
 docker run -d \
     --network TouGH-Vault \
 	--name TouGH-Vault-postgres \
