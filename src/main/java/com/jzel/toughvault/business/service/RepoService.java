@@ -93,7 +93,8 @@ public class RepoService {
   private void updateBackupsWhereNecessary(List<Repo> updatedRepos) {
     final Settings settings = settingsService.getSettings();
     if (settings.isAutoRepoUpdate()) {
-      updatedRepos.stream().filter(this::backupCanBeInitiated).forEach(this::backupRepo);
+      updatedRepos.stream().filter(this::backupCanBeInitiated)
+          .forEach(this::backupRepo); // TODO only backup new repos (alternately change setting description)
     }
     if (settings.isAutoCommitUpdate()) {
       updatedRepos.stream().filter(this::backupCanBeUpdated).forEach(this::backupRepo);
