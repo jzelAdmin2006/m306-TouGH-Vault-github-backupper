@@ -63,7 +63,8 @@ public class GitService {
   @SneakyThrows({IOException.class, GitAPIException.class})
   public void restoreRepo(Repo repo) {
     try (Git git = Git.open(volumeLocationAsDir(repo.getVolumeLocation()))) {
-      git.branchList().setListMode(ALL).call().forEach(ref -> pushBranch(ref, git));
+      git.branchList().setListMode(ALL).call()
+          .forEach(ref -> pushBranch(ref, git)); // TODO fix restoration for fellow account repos
     }
   }
 
