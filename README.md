@@ -22,7 +22,7 @@ docker run --name TouGH-Vault-Keycloak -d -p 18080:8080 \
     -e KC_PROXY=edge \
     -e KC_HOSTNAME=tough-vault-keycloak.jzel.online \
     -e DB_VENDOR=postgres \
-    -e DB_ADDR=TouGH-Vault-postgres \
+    -e DB_ADDR=Keycloak-postgres \
     -e DB_PORT=5433 \
     -e DB_DATABASE=keycloak \
     -e DB_USER=keycloak \
