@@ -60,3 +60,9 @@ docker volume remove postgres
 TODO: fix Keycloak persistence by doing something like
 this (
 using https://www.decomposerize.com/): https://keycloak.discourse.group/t/setup-keycloak-version-21-0-2-with-postgres-using-docker/21345/2
+
+For now, this app won't be listed in the GitHub Marketplace because according to the requirements, the app mustn't be in
+beta and fully usable in production for any
+user: https://docs.github.com/en/apps/github-marketplace/creating-apps-for-github-marketplace/requirements-for-listing-an-app
+Thus, at the moment, only an unlisted public page for the demo deployment
+exists: https://github.com/apps/tough-vault-demo-deployment
