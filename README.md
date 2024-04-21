@@ -56,3 +56,7 @@ docker remove TouGH-Vault-frontend
 docker network remove TouGH-Vault
 docker volume remove postgres
 ```
+
+TODO: fix Keycloak persistence by doing something like
+this (
+using https://www.decomposerize.com/): https://keycloak.discourse.group/t/setup-keycloak-version-21-0-2-with-postgres-using-docker/21345/2
