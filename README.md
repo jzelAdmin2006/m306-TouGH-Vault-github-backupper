@@ -1,6 +1,8 @@
 # m306-TouGH-Vault-github-backupper
 
-How to run TouGH-Vault with Docker:
+How to run TouGH-Vault with Docker
+(use corresponding [realm export](TouGH-Vault-deployment-realm-export.json), client secret has to be set before
+importing):
 
 ```bash
 docker network create TouGH-Vault
@@ -55,6 +57,14 @@ docker remove TouGH-Vault
 docker remove TouGH-Vault-frontend
 docker network remove TouGH-Vault
 docker volume remove postgres
+```
+
+How to start Keycloak container for TouGH-Vault development purposes
+(use corresponding [realm export](TouGH-Vault-realm-export.json), client secret has to be set before importing):
+
+```bash
+docker run --name TouGH-Vault-Keycloak -d -p 18080:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin \
+  -e KEYCLOAK_FRONTEND_URL=localhost:18080 quay.io/keycloak/keycloak:23.0.7 start-dev
 ```
 
 TODO: fix Keycloak persistence by doing something like
