@@ -113,6 +113,10 @@ public class GitHubService {
     }
   }
 
+  public String getUserName() throws IOException {
+    return getUserName(() -> auth.getAccessToken().orElseThrow());
+  }
+
   @SneakyThrows(IOException.class)
   private void executeSshKeyExchange() {
     final String token = auth.getAccessToken().orElseThrow();
@@ -147,10 +151,6 @@ public class GitHubService {
     List<GitHubEmailDto> emailList = gson.fromJson(requireNonNull(response.body()).string(),
         GITHUB_EMAILS_ARRAY_TYPE);
     return emailList.stream().filter(GitHubEmailDto::isPrimary).findFirst().orElseThrow().getEmail();
-  }
-
-  private String getUserName() throws IOException {
-    return getUserName(() -> auth.getAccessToken().orElseThrow());
   }
 
   private String getUserName(Supplier<String> tokenSup) throws IOException {

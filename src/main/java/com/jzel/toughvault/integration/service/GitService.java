@@ -10,6 +10,7 @@ import com.jzel.toughvault.config.BackupVolumeConfig;
 import com.jzel.toughvault.config.SshConfig;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.RefSpec;
+import org.eclipse.jgit.transport.URIish;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -60,12 +62,18 @@ public class GitService {
     }
   }
 
-  @SneakyThrows({IOException.class, GitAPIException.class})
+  @SneakyThrows({IOException.class, GitAPIException.class, URISyntaxException.class})
   public void restoreRepo(Repo repo) {
     try (Git git = Git.open(volumeLocationAsDir(repo.getVolumeLocation()))) {
+      git.remoteSetUrl().setRemoteName("origin").setRemoteUri(new URIish(toSshUri(repo.getName()))).call();
+      git.remoteList().call();
       git.branchList().setListMode(ALL).call()
-          .forEach(ref -> pushBranch(ref, git)); // TODO fix restoration for fellow account repos
+          .forEach(ref -> pushBranch(ref, git));
     }
+  }
+
+  public void adaptFolderNameToRenamedVolumeLocation(Repo repo, String oldVolumeLocation) {
+    volumeLocationAsDir(oldVolumeLocation).renameTo(volumeLocationAsDir(repo.getVolumeLocation()));
   }
 
   @SneakyThrows(GitAPIException.class)

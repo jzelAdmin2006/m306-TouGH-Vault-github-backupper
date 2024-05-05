@@ -1,6 +1,8 @@
 package com.jzel.toughvault.business.service;
 
 import static com.jzel.toughvault.common.config.Scheduling.MINUTES_SCAN_INTERVAL;
+import static java.net.URLEncoder.encode;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.partitioningBy;
 import static java.util.stream.Collectors.toMap;
@@ -12,6 +14,7 @@ import com.jzel.toughvault.business.domain.Settings;
 import com.jzel.toughvault.integration.service.GitHubService;
 import com.jzel.toughvault.integration.service.GitService;
 import com.jzel.toughvault.persistence.domain.repo.RepoRepository;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +23,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -80,6 +84,7 @@ public class RepoService {
 
   public void restoreRepo(Repo repo) {
     backupExecutor.submit(() -> {
+      transferInCaseOfFellowRepo(repo); // TODO prevent name collision with existing repos
       gitHubService.initialiseRepo(repo);
       gitService.restoreRepo(repo);
       final Optional<LocalDateTime> restorePush = gitHubService.getRepoByName(repo.getName()).getLatestPush().get();
@@ -88,6 +93,20 @@ public class RepoService {
       repo.getLatestFetch().set(restorePush);
       repoRepository.save(repo);
     });
+  }
+
+  @SneakyThrows(IOException.class)
+  private void transferInCaseOfFellowRepo(Repo repo) {
+    final String[] splitRepoName = repo.getName().split("/");
+    final String userName = gitHubService.getUserName();
+    final String repoUserName = splitRepoName[0];
+    if (!userName.equals(repoUserName)) {
+      final String newName = userName + "/" + repoUserName + "-" + splitRepoName[1];
+      repo.setName(newName);
+      final String oldVolumeLocation = repo.getVolumeLocation();
+      repo.setVolumeLocation(encode(newName, UTF_8));
+      gitService.adaptFolderNameToRenamedVolumeLocation(repo, oldVolumeLocation);
+    }
   }
 
   private void updateBackupsWhereNecessary(List<Repo> updatedRepos) {
