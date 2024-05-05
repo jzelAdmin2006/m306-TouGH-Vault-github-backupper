@@ -84,7 +84,7 @@ public class RepoService {
 
   public void restoreRepo(Repo repo) {
     backupExecutor.submit(() -> {
-      transferInCaseOfFellowRepo(repo); // TODO prevent name collision with existing repos
+      transferInCaseOfFellowRepo(repo); // TODO (optional feature) prevent name collision with existing repos
       gitHubService.initialiseRepo(repo);
       gitService.restoreRepo(repo);
       final Optional<LocalDateTime> restorePush = gitHubService.getRepoByName(repo.getName()).getLatestPush().get();
