@@ -51,7 +51,7 @@ public class RepoService {
     final Set<String> repoNames = repos.stream().map(Repo::getName).collect(toSet());
     List<Repo> updatedRepos = getReposToSave(repos, existingRepos, repoNames);
     repoRepository.saveAll(updatedRepos);
-    updateBackupsWhereNecessary(getAllRepoEntries());
+    updateBackupsWhereNecessary(existingRepos, getAllRepoEntries());
     handleGitHubDeletedRepos(existingRepos, repoNames);
   }
 
@@ -109,11 +109,13 @@ public class RepoService {
     }
   }
 
-  private void updateBackupsWhereNecessary(List<Repo> updatedRepos) {
+  private void updateBackupsWhereNecessary(List<Repo> reposBefore, List<Repo> updatedRepos) {
     final Settings settings = settingsService.getSettings();
     if (settings.isAutoRepoUpdate()) {
-      updatedRepos.stream().filter(this::backupCanBeInitiated)
-          .forEach(this::backupRepo); // TODO only backup new repos (alternately change setting description)
+      updatedRepos.stream()
+          .filter(repo -> reposBefore.stream().noneMatch(r -> r.getName().equals(repo.getName())))
+          .filter(this::backupCanBeInitiated)
+          .forEach(this::backupRepo);
     }
     if (settings.isAutoCommitUpdate()) {
       updatedRepos.stream().filter(this::backupCanBeUpdated).forEach(this::backupRepo);
