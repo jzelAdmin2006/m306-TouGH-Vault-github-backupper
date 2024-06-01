@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -58,7 +59,13 @@ public class GitHubController {
   }
 
   private boolean scanIsAllowed() {
-    return lastManualScanTime.get().map(t -> t.isBefore(now().minusMinutes(MINUTES_SCAN_INTERVAL))).orElse(true);
+    return lastManualScanTime.get().map(t -> t.isBefore(now().minusMinutes(MINUTES_SCAN_INTERVAL))).orElse(true)
+        || isAdmin();
+  }
+
+  private boolean isAdmin() {
+    return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+        .anyMatch(a -> a.getAuthority().equals("ROLE_TouGH-Vault-Admin"));
   }
 
   private ResponseEntity<Void> proceedScan() {
