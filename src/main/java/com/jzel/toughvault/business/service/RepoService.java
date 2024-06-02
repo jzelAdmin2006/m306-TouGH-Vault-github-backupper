@@ -118,7 +118,15 @@ public class RepoService {
           .forEach(this::backupRepo);
     }
     if (settings.isAutoCommitUpdate()) {
-      updatedRepos.stream().filter(this::backupCanBeUpdated).forEach(this::backupRepo);
+      updatedRepos.stream()
+          .filter(this::backupCanBeUpdated)
+          .filter(
+              r -> reposBefore.stream()
+                  .filter(rb -> rb.getName().equals(r.getName()))
+                  .allMatch(rb -> rb.getLatestPush().get()
+                      .map(lpRb -> lpRb.isBefore(r.getLatestPush().get().orElse(lpRb))).orElse(false))
+          )
+          .forEach(this::backupRepo);
     }
   }
 
