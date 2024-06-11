@@ -1,5 +1,9 @@
 # m306-TouGH-Vault-github-backupper
 
+## Frontend
+
+An example of a client can be found at https://github.com/jzelAdmin2006/m306-TouGH-Vault-github-backupper-frontend. It was not the focus of our project, the centrepiece is definitely the server, i.e. this repo, but although it is not perfect, it is simple and intuitive.
+
 ## Architecture
 
 ![AdjustedArchitectureWithPostgres drawio](https://github.com/jzelAdmin2006/m306-TouGH-Vault-github-backupper/assets/112761658/67111673-a3a6-4a96-83f4-fc9659433d0b)
