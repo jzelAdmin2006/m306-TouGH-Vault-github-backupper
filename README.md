@@ -1,5 +1,11 @@
 # m306-TouGH-Vault-github-backupper
 
+## Architecture
+
+![AdjustedArchitectureWithPostgres drawio](https://github.com/jzelAdmin2006/m306-TouGH-Vault-github-backupper/assets/112761658/67111673-a3a6-4a96-83f4-fc9659433d0b)
+
+
+## How to use
 How to run TouGH-Vault with Docker
 (use corresponding [realm export](TouGH-Vault-deployment-realm-export.json), client secret has to be set before
 importing):
